@@ -163,7 +163,7 @@ with st.sidebar:
 
 # Overview KPIs
 c1, c2, c3, c4 = st.columns(4)
-c1.metric("Date coverage", f"{daily.index.min():%b %Y} – {daily.index.max():%b %Y}")
+c1.metric("Date coverage", f"{daily.index.min():%b '%y} – {daily.index.max():%b '%y}")
 c2.metric("Average daily power", f"{daily.mean():.3f} kW")
 c3.metric("Peak minute power", f"{cleaned['Global_active_power'].max():.2f} kW")
 best_rmse = float(metrics.loc[metrics["Model"] == best_model_name, "RMSE"].iloc[0])
