@@ -75,7 +75,13 @@ def fmt(value: float, decimals: int = 3) -> str:
 
 
 def show_figure(fig, key: str | None = None):
-    st.plotly_chart(fig, use_container_width=True, key=key)
+    # Hide the Plotly modebar to keep charts uncluttered on narrow mobile screens.
+    st.plotly_chart(
+        fig,
+        use_container_width=True,
+        key=key,
+        config={"displayModeBar": False, "responsive": True},
+    )
 
 
 st.markdown(
@@ -176,7 +182,11 @@ with tabs[0]:
         st.subheader("Daily mean active power")
         recent_days = st.selectbox("History window", ["All available dates", "Last 365 days", "Last 180 days", "Last 90 days"], index=0)
         view = daily if recent_days == "All available dates" else daily.tail(int(recent_days.split()[1]))
-        fig = px.line(view.rename("Daily mean active power"), x=view.index, y="Daily mean active power")
+        daily_view = pd.DataFrame({
+            "Date": pd.to_datetime(view.index),
+            "Daily mean active power": view.to_numpy(),
+        })
+        fig = px.line(daily_view, x="Date", y="Daily mean active power")
         fig.update_traces(line=dict(width=1.6, color="#0E8A74"))
         fig.update_layout(xaxis_title="Date", yaxis_title="Power (kW)", margin=dict(l=10,r=10,t=20,b=10), hovermode="x unified")
         show_figure(fig, "overview_daily")
@@ -215,14 +225,16 @@ with tabs[1]:
     c, d = st.columns(2)
     with c:
         monthly = cleaned["Global_active_power"].resample("MS").mean().dropna()
-        fig_month = px.line(monthly.rename("Mean power"), x=monthly.index, y="Mean power", markers=True)
+        monthly_view = pd.DataFrame({"Date": monthly.index, "Mean power": monthly.to_numpy()})
+        fig_month = px.line(monthly_view, x="Date", y="Mean power", markers=True)
         fig_month.update_traces(line_color="#0E8A74")
         fig_month.update_layout(xaxis_title="Month", yaxis_title="Mean active power (kW)", margin=dict(l=10,r=10,t=20,b=10))
         st.subheader("Monthly pattern")
         show_figure(fig_month, "monthly_pattern")
     with d:
         weekly = daily.resample("W").mean().dropna()
-        fig_weekly = px.line(weekly.rename("Mean power"), x=weekly.index, y="Mean power")
+        weekly_view = pd.DataFrame({"Date": weekly.index, "Mean power": weekly.to_numpy()})
+        fig_weekly = px.line(weekly_view, x="Date", y="Mean power")
         fig_weekly.update_traces(line_color="#E39A3B")
         fig_weekly.update_layout(xaxis_title="Week ending", yaxis_title="Mean active power (kW)", margin=dict(l=10,r=10,t=20,b=10))
         st.subheader("Weekly pattern")
