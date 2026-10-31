@@ -246,9 +246,12 @@ with tabs[2]:
     hist_col, qq_col = st.columns(2)
     with hist_col:
         st.markdown("**Distribution histogram**")
-        fig_hist = px.histogram(cleaned, x="Global_active_power", nbins=55, marginal="rug")
-        fig_hist.update_traces(marker_color="#7BB3C7")
-        fig_hist.update_layout(xaxis_title="Global active power (kW)", yaxis_title="Count", margin=dict(l=10,r=10,t=20,b=10))
+        hist_counts, hist_edges = np.histogram(cleaned["Global_active_power"].to_numpy(), bins=55)
+        hist_centres = (hist_edges[:-1] + hist_edges[1:]) / 2
+        fig_hist = go.Figure(go.Bar(x=hist_centres, y=hist_counts, marker_color="#7BB3C7",
+                                    width=np.diff(hist_edges)))
+        fig_hist.update_layout(xaxis_title="Global active power (kW)", yaxis_title="Count",
+                               margin=dict(l=10,r=10,t=20,b=10))
         show_figure(fig_hist, "normality_hist")
     with qq_col:
         st.markdown("**Normal Q–Q plot**")
@@ -268,7 +271,8 @@ with tabs[2]:
     o2.metric("Outlier proportion", f"{diagnostic_results['outlier_pct']:.2f}%")
     o3.metric("Upper IQR bound", f"{diagnostic_results['upper_bound']:.3f} kW")
     st.write(f"Lower bound: **{diagnostic_results['lower_bound']:.3f} kW** · Q1: **{diagnostic_results['q1']:.3f} kW** · Q3: **{diagnostic_results['q3']:.3f} kW**")
-    box = go.Figure(go.Box(x=cleaned["Global_active_power"], boxpoints="outliers", name="Global active power", marker_color="#DDA33F"))
+    box = go.Figure(go.Box(x=diagnostic_results["sample"], boxpoints="outliers",
+                           name="Diagnostic sample (n ≤ 5,000)", marker_color="#DDA33F"))
     box.add_vline(x=diagnostic_results["lower_bound"], line_dash="dash", line_color="#D7263D", annotation_text="Lower IQR bound")
     box.add_vline(x=diagnostic_results["upper_bound"], line_dash="dash", line_color="#D7263D", annotation_text="Upper IQR bound")
     box.update_layout(xaxis_title="Global active power (kW)", showlegend=False, margin=dict(l=10,r=10,t=25,b=10))
