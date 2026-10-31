@@ -29,6 +29,7 @@ def parse_household_file(payload: bytes) -> pd.DataFrame:
             if not files:
                 raise ValueError("The ZIP archive does not contain the household TXT dataset.")
             source = BytesIO(archive.read(files[0]))
+    source.seek(0)
     frame = pd.read_csv(source, sep=";", na_values="?", low_memory=False)
     required = {"Date", "Time", *MEASURE_COLUMNS}
     missing = required.difference(frame.columns)
